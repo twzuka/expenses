@@ -43,3 +43,10 @@ python expenses.py total  [категория]
 ```
 
 **Выводит сумму всех расходов.**
+
+---
+
+### 5. Показать список всех команд
+
+```bash
+python expenses.py help
