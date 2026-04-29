@@ -5,21 +5,27 @@ commands = {"add", "add-category", "list", "total", "help"}
 FILE_NAME = "data.json"
 
 
-def start():
+def check_len(string, length):
+    return len(string) <= length
+
+
+def load_data():
     try:
         with open(FILE_NAME, "r", encoding="utf-8") as file:
             data = json.load(file)
     except FileNotFoundError:
         data = {}
+    except json.JSONDecodeError:
+        data = {}
     return data
 
 
-def save(data):
+def save_data(data):
     with open(FILE_NAME, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
-def help():
+def print_commands():
     print("--- СПИСОК ВСЕХ КОМАНД ---")
     print(
         "1. Добавить расход: «python expenses.py add <стоимость> <категория> <название>»"
@@ -29,78 +35,107 @@ def help():
     print("4. Показать сумму расходов: «python expenses.py total  [категория]»")
 
 
-def add_category(cat):
-    data = start()
-    if cat not in data:
-        data[cat] = []
-        save(data)
+def add_category(category):
+    low_category = category.lower()
+    data = load_data()
+    if low_category not in data:
+        data[low_category] = []
+        save_data(data)
     else:
         print("Ошибка: категория уже существует!")
 
 
-def add(price, cat, name):
+def add(price, category, item_name):
+    low_category = category.lower()
     try:
         int_price = int(price)
+        if int_price < 0:
+            print(f"Ошибка: число {int_price} отрицательное!")
+            sys.exit(1)
     except ValueError:
         print("Ошибка: введено не число!")
-        return
-    data = start()
-    if cat in data:
-        data[cat].append([int_price, name])
-        save(data)
+        sys.exit(1)
+    data = load_data()
+    if low_category in data:
+        data[low_category].append([int_price, item_name])
+        save_data(data)
     else:
-        print("Ошибка: такой категории не существует!")
+        print(f"Ошибка: категории {category} не существует!")
         return
 
 
-def list_cat(cat_arg):
-    data = start()
+def list_expenses(argument):
+    data = load_data()
 
-    if not cat_arg or not cat_arg.strip():
+    if not argument or not argument.strip():
         print(f"--- ПОЛНЫЙ СПИСОК РАСХОДОВ ---")
         for cat, exp in data.items():
-            print(f"Категория: {cat}")
+            print(f"Категория: {cat.capitalize()}")
             for item in exp:
                 print(f"-- {item[1]}: {item[0]} руб.")
-    elif cat_arg in data:
-        print(f"--- РАСХОДЫ ПО КАТЕГОРИИ: {cat_arg} ---")
-        for item in data[cat_arg]:
-            print(f"-- {item[1]}: {item[0]} руб.")
     else:
-        print(f"Ошибка: категории '{cat_arg}' не существует.")
+        category_lower = argument.lower()
+        if category_lower in data:
+            print(f"--- РАСХОДЫ ПО КАТЕГОРИИ: {category_lower.capitalize()} ---")
+            for item in data[category_lower]:
+                print(f"-- {item[1]}: {item[0]} руб.")
+        else:
+            print(f"Ошибка: категории '{argument}' не существует.")
 
 
-def total_exp(cat_arg):
-    data = start()
+def total_expenses(argument):
+    data = load_data()
 
-    if not cat_arg or not cat_arg.strip():
+    if not argument or not argument.strip():
         print("--- ПОЛНАЯ СУММА РАСХОДОВ ---")
         for cat, exp in data.items():
             total = 0
             for item in exp:
                 total += int(item[0])
-            print(f"Категория {cat}: {total} руб.")
-    elif cat_arg in data:
-        total = 0
-        for item in data[cat_arg]:
-            total += int(item[0])
-        print(f"--- Всего по категории {cat_arg}: {total} руб. ---")
+            print(f"Категория {cat.capitalize()}: {total} руб.")
+    else:
+        low_category = argument.lower()
+        if low_category in data:
+            total = 0
+            for item in data[low_category]:
+                total += int(item[0])
+            print(f"--- Всего по категории {low_category.capitalize()}: {total} руб. ---")
+        else:
+            print(f"Ошибка: категории '{argument}' не существует.")
 
 
 args = sys.argv
+
 if len(args) > 1:
-    if args[1] in commands:
-        if args[1] == "add" and len(sys.argv) == 5:
+    command = args[1]
+
+    if command not in commands:
+        print(f"Ошибка: Неизвестная команда: '{command}'!")
+        sys.exit(1)
+    elif command == "add":
+        if len(args) == 5:
             add(args[2], args[3], args[4])
-        elif args[1] == "add-category" and len(sys.argv) == 3:
-            add_category(args[2])
-        elif args[1] == "list":
-            list_cat(args[2] if len(sys.argv) == 3 else None)
-        elif args[1] == "total":
-            total_exp(args[2] if len(sys.argv) == 3 else None)
-        elif args[1] == "help" and len(sys.argv) == 2:
-            help()
         else:
-            print("Ошибка: Неизвестная команда!")
+            print(
+                "Ошибка: Команда 'add' требует 3 аргумета: стоимость, категория и название."
+            )
+            sys.exit(1)
+    elif command == "add-category":
+        if len(args) == 3:
+            add_category(args[2])
+        else:
+            print(
+                "Ошибка: Команда 'add-category' требует 1 аргумент: название категории."
+            )
+            sys.exit(1)
+    elif command == "list":
+        obj = args[2] if len(args) == 3 else None
+        list_expenses(obj)
+    elif command == "total":
+        obj = args[2] if len(args) == 3 else None
+        total_expenses(obj)
+    elif command == "help":
+        print_commands()
 else:
-    help()
+    print("Ошибка: Неизвестная команда!")
+    print("Для вывода всех команд использьуйте 'help'")
