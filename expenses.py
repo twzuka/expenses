@@ -33,6 +33,7 @@ def print_commands():
     print("2. Добавить категорию: «python expenses.py add-category <категория>»")
     print("3. Показать все расходы: «python expenses.py list [категория]»")
     print("4. Показать сумму расходов: «python expenses.py total  [категория]»")
+    print("5. Показать список команд: «python expenses.py help»")
 
 
 def add_category(category):
@@ -40,26 +41,40 @@ def add_category(category):
         print("Ошибка: название категории слишком длинное! Максимум 20 символов.")
         sys.exit(1)
 
-    low_category = category.lower()
+    if not category.strip():
+        print("Ошибка: название категории не может быть пустым.")
+        sys.exit(1)
+
+    category_lower = category.strip().lower()
     data = load_data()
     
-    if low_category not in data:
-        data[low_category] = []
+    if category_lower not in data:
+        data[category_lower] = []
         save_data(data)
     else:
         print(f"Ошибка: Категория '{category}' уже существует!")
+        sys.exit(1)
 
 
 def add(price, category, item_name):
     if not check_len(category, 20):
         print("Ошибка: название категории слишком длинное! Максимум 20 символов.")
         sys.exit(1)
+        
+    if not category.strip():
+        print("Ошибка: название категории не может быть пустым.")
+        sys.exit(1)
 
     if not check_len(item_name, 30):
         print("Ошибка: название расхода слишком длинное! Максимум 30 символов.")
         sys.exit(1)
+        
+    if not item_name.strip():
+        print("Ошибка: название расхода не может быть пустым.")
+        sys.exit(1)
 
-    low_category = category.lower()
+    category_lower = category.strip().lower()
+    item_name = item_name.strip()
 
     try:
         float_price = float(price)
@@ -74,11 +89,12 @@ def add(price, category, item_name):
  
     data = load_data()
 
-    if low_category in data:
-        data[low_category].append([float_price, item_name])
+    if category_lower in data:
+        data[category_lower].append([float_price, item_name])
         save_data(data)
     else:
         print(f"Ошибка: Категории {category} не существует!")
+        sys.exit(1)
 
 
 def list_expenses(argument):
@@ -94,7 +110,7 @@ def list_expenses(argument):
                 print(f"-- {item[1]}: {float(item[0]):.2f} руб.")
                 
     else:
-        category_lower = argument.lower()
+        category_lower = argument.strip().lower()
         
         if category_lower in data:
             print(f"--- РАСХОДЫ ПО КАТЕГОРИИ: {category_lower.capitalize()} ---")
@@ -104,6 +120,7 @@ def list_expenses(argument):
                 
         else:
             print(f"Ошибка: Категории '{argument}' не существует.")
+            sys.exit(1)
 
 
 def total_expenses(argument):
@@ -115,7 +132,7 @@ def total_expenses(argument):
         all_total = 0.0
 
         for cat, exp in data.items():
-            total = 0
+            total = 0.0
 
             for item in exp:
                 total += float(item[0])
@@ -127,18 +144,19 @@ def total_expenses(argument):
         print(f"--- Общий итог: {all_total:.2f} руб. ---")
         
     else:
-        low_category = argument.lower()
+        category_lower = argument.strip().lower()
 
-        if low_category in data:
+        if category_lower in data:
             total = 0.0
 
-            for item in data[low_category]:
+            for item in data[category_lower]:
                 total += float(item[0])
 
-            print(f"--- Всего по категории {low_category.capitalize()}: {total:.2f} руб. ---")
+            print(f"--- Всего по категории {category_lower.capitalize()}: {total:.2f} руб. ---")
             
         else:
             print(f"Ошибка: Категории '{argument}' не существует.")
+            sys.exit(1)
 
 
 args = sys.argv
