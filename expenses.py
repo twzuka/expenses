@@ -62,20 +62,20 @@ def add(price, category, item_name):
     low_category = category.lower()
 
     try:
-        int_price = int(price)
+        float_price = float(price)
         
-        if int_price < 0:
-            print(f"Ошибка: Число {int_price} отрицательное!")
+        if float_price < 0:
+            print(f"Ошибка: Число {float_price} отрицательное!")
             sys.exit(1)
-            
+        
     except ValueError:
         print("Ошибка: Введено не число!")
         sys.exit(1)
-        
+ 
     data = load_data()
-    
+
     if low_category in data:
-        data[low_category].append([int_price, item_name])
+        data[low_category].append([float_price, item_name])
         save_data(data)
     else:
         print(f"Ошибка: Категории {category} не существует!")
@@ -91,7 +91,7 @@ def list_expenses(argument):
             print(f"Категория: {cat.capitalize()}")
             
             for item in exp:
-                print(f"-- {item[1]}: {item[0]} руб.")
+                print(f"-- {item[1]}: {float(item[0]):.2f} руб.")
                 
     else:
         category_lower = argument.lower()
@@ -100,7 +100,7 @@ def list_expenses(argument):
             print(f"--- РАСХОДЫ ПО КАТЕГОРИИ: {category_lower.capitalize()} ---")
             
             for item in data[category_lower]:
-                print(f"-- {item[1]}: {item[0]} руб.")
+                print(f"-- {item[1]}: {float(item[0]):.2f} руб.")
                 
         else:
             print(f"Ошибка: Категории '{argument}' не существует.")
@@ -112,30 +112,30 @@ def total_expenses(argument):
     if not argument or not argument.strip():
         print("--- ПОЛНАЯ СУММА РАСХОДОВ ---")
 
-        all_total = 0
+        all_total = 0.0
 
         for cat, exp in data.items():
             total = 0
 
             for item in exp:
-                total += int(item[0])
+                total += float(item[0])
 
             all_total += total
 
-            print(f"Категория {cat.capitalize()}: {total} руб.")
+            print(f"Категория {cat.capitalize()}: {total:.2f} руб.")
 
-        print(f"--- Общий итог: {all_total} руб. ---")
+        print(f"--- Общий итог: {all_total:.2f} руб. ---")
         
     else:
         low_category = argument.lower()
 
         if low_category in data:
-            total = 0
+            total = 0.0
 
             for item in data[low_category]:
-                total += int(item[0])
+                total += float(item[0])
 
-            print(f"--- Всего по категории {low_category.capitalize()}: {total} руб. ---")
+            print(f"--- Всего по категории {low_category.capitalize()}: {total:.2f} руб. ---")
             
         else:
             print(f"Ошибка: Категории '{argument}' не существует.")
@@ -165,12 +165,22 @@ if len(args) > 1:
             sys.exit(1)
             
     elif command == "list":
-        obj = args[2] if len(args) == 3 else None
-        list_expenses(obj)
-        
+        if len(args) == 2:
+            list_expenses(None)
+        elif len(args) == 3:
+            list_expenses(args[2])
+        else:
+            print("Ошибка: Команда 'list' принимает не больше 1 аргумента: категория.")
+            sys.exit(1)
+
     elif command == "total":
-        obj = args[2] if len(args) == 3 else None
-        total_expenses(obj)
+        if len(args) == 2:
+            total_expenses(None)
+        elif len(args) == 3:
+            total_expenses(args[2])
+        else:
+            print("Ошибка: Команда 'total' принимает не больше 1 аргумента: категория.")
+            sys.exit(1)
         
     elif command == "help":
         print_commands()
