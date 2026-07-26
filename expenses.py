@@ -2,7 +2,7 @@ import sys
 import json
 
 
-commands = {"add", "add-category", "list", "total", "help"}
+commands = ["add", "add-category", "list", "total", "help"]
 
 FILE_NAME = "data.json"
 
