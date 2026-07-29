@@ -1,6 +1,6 @@
 class ExpenseManager:
     def __init__(self):
-        self.categories = {"food": []}
+        self.categories = {}
 
     # создание
     def add_category(self, category):
